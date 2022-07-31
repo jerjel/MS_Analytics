@@ -1,0 +1,71 @@
+CREATE TABLE IF NOT EXISTS employee1
+(Name string, 
+mgrEid char(4), 
+Budget decimal, 
+city String,
+state String)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+Load data local inpath "employee.txt" into table employee1;
+
+Load data local inpath “employee.txt" OVERWRITE into table employee;
+
+
+CREATE TABLE IF NOT EXISTS dept
+(Name string, 
+mgrEid char(4), 
+Budget decimal, 
+city String,
+state String)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+set hive.cli.print.header=true;
+Load data local inpath "employee.txt"  OVERWRITE into table employee;
+
+Load data local inpath "dept.txt" into table dept;
+
+SELECT * FROM employee ORDER BY salary LIMIT 2;
+
+
+select *
+from employee e join department d on (e.dept = d.name);
+
+CREATE TABLE IF NOT EXISTS nyc_taxi_Jan(vendor_id String,pickup_datetime timestamp,dropoff_datetime timestamp,passenger_count int,trip_distance double,pickup_longitude double,pickup_latitude double,rate_code int,store_and_fwd_flag char(1),dropoff_longitude double,dropoff_latitude double,payment_type CHAR(3),fare_amount double,surcharge double,mta_tax double,tip_amount double,tolls_amount double,total_amount double) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' STORED AS TEXTFILE tblproperties ("skip.header.line.count"="2");
+
+Load data local inpath "yellow_tripdata_2014-01.csv" into table nyc_taxi_Jan;
+
+CREATE TABLE IF NOT EXISTS nyc_taxi
+(vendor_id char(3), 
+pickup_datetime Timestamp, 
+dropoff_datetime Timestamp,
+passenger_count SMALLINT, 
+trip_distance double,
+pickup_longitude double,
+pickup_latitude double,
+rate_code SMALLINT, 
+store_and_fwd_flag char(1), 
+dropoff_longitude double,
+dropoff_latitude double,
+payment_type char(3), 
+fare_amount double,
+surcharge double,
+mta_tax double,
+tip_amount double,
+tolls_amount double,
+total_amount double)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+tblproperties ("skip.header.line.count"="2");
+
+Load data local inpath " yellow_tripdata_2014-01.csv" into table nyc_taxi;
+
+SELECT  hour(pickup_datetime) as hr, count(*) FROM nyc_taxi GROUP BY hour(pickup_datetime) ORDER BY hr;
+

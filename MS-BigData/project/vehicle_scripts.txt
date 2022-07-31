@@ -1,0 +1,143 @@
+CREATE TABLE IF NOT EXISTS crash_vehicle
+(
+X double,
+Y double,
+OBJECTID int,
+VEH_CRASH_KEY bigint,
+VEH_UNITKEY bigint,
+CASENUMBER bigint,
+DRIVERAGE int,
+DRIVERGEN varchar(10),
+DL_STATE varchar(20),
+CHARGED varchar(50),
+ALCRESULT double,
+DRUGTEST varchar(50),
+DRUGRESULT varchar(50),
+DRIVERCOND varchar(50),
+VISIONOBS varchar(50),
+DCONTCIRC1 varchar(50),
+DCONTCIRC2 varchar(50),           
+VCONFIG varchar(50),
+CARGOBODY varchar(50),
+VYEAR int,
+MAKE varchar(20),
+MODEL varchar(20),
+STYLE varchar(50),
+VLP_STATE char(20),
+OCCUPANTS int,
+VACTION varchar(50),
+SEQEVENTS1 varchar(50),           
+SEQEVENTS2 varchar(50),
+SEQEVENTS3 varchar(50),
+SEQEVENTS4 varchar(50),
+MOSTHARM varchar(50),
+SPEEDLIMIT varchar(20),
+TRAFCONT varchar(50),
+FIXOBJSTR varchar(50),
+MOSTDAMAGE varchar(50),
+DAMAGE varchar(50),
+CSEVERITY varchar(50),
+MAJORCAUSE varchar(50),
+CSURFCOND varchar(50),
+DRUGALCREL varchar(50),
+ROADTYPE varchar(50),
+WZ_RELATED varchar(50),
+FATALITIES int,
+CRASH_YEAR int,
+XCOORD double,
+YCOORD double,
+FROM_MEASURE varchar(50),
+TO_MEASURE varchar(50),
+ROUTEID varchar(50),
+CRASH_DATETIME varchar(30),
+CRASH_DATETIME_UTC varchar(25),
+CRASH_DATETIME_UTC_OFFSET varchar(50),
+REST_UPDATED  varchar(25),
+REST_UPDATED_UTC_OFFSET varchar(50)
+) 
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+tblproperties ("skip.header.line.count"="1");
+
+Load data local inpath "project/Moter_Vehicle_Crashes/crash_vehicle_clean.csv" into table crash_vehicle;
+
+select CARGOBODY, MAKE ,MODEL ,STYLE, SPEEDLIMIT from crash_vehicle
+
+------------------------------------------------------------------------------------------------------------------------------
+
+CLEANING
+
+sed -i 's/, /; /g' research_no_commas.csv
+
+sed -i 's/"//g' research_no_commas.csv
+
+
+
+grep -E '".*,.*"' research_commas_in_quotes.csv | head -n 10
+
+sed ':a;s/^\(\([^"]*,\?\|"[^",]*",\?\)*"[^",]*\),/\1 /g;ta' research_no_commas.csv
+echo '123,"ABC, DEV 23",345,534,"some more, comma-separated, words",202,NAME' | sed -e 's/\(\"[^",]\+\),\([^",]*\)/\1 \2/g' -e 's/\(\"[^",]\+\),\([^",]*\)/\1 \2/g' -e 's/\"//g'
+
+echo '123,"ABC, DEV 23",345,534,"some more, comma-separated, words",202,NAME'|  sed ':a;s/^\(\([^"]*,\?\|"[^",]*",\?\)*"[^",]*\),/\1 /;ta' 
+
+------------------------------------------------------------------------------------------------------------------------------
+
+Model that crashed the most:
+select make,  model, count(*) as total from crash_vehicle_clean group by make, model order by total;
+select STYLE, count(*) as total from crash_vehicle_clean group by STYLE order by total;
+
+
+Major Causet:
+select MAJORCAUSE, count(*) as total from crash_vehicle_clean group by MAJORCAUSE  order by total;
+select DRIVERAGE, count(*) as total from crash_vehicle_clean group by DRIVERAGE  order by total;
+
+
+Major Fatalities:
+select MAJORCAUSE, sum(Fatalities) as total from crash_vehicle_clean group by MAJORCAUSE  order by total;
+
+Road type when most crashes happened:
+select roadtype, count(*) as total from crash_vehicle_clean group by roadtype order by total;
+
+Popular drug among crashers:
+select drugresult, count(*) as total from crash_vehicle_clean group by drugresult order by total;
+
+Gender Based:
+select DRIVERGEN, count(*) as total from crash_vehicle_clean group by DRIVERGEN order by total;
+
+Most from other state:
+select DL_STATE, count(*) as total from crash_vehicle_clean group by DL_STATE order by total;
+
+Most Accident Months:
+select month(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as month, count(*) as total from crash_vehicle_clean group by month(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by total;
+
+Most Accident Years:
+select year(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as year, count(*) as total from crash_vehicle_clean group by year(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by total;
+select year(from_unixtime(unix_timestamp(CRASH_DATETIME, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as year, (case when year(from_unixtime(unix_timestamp(CRASH_DATETIME, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))-vyear>5 then 1 else 0 end) as old as vehicleyear, count(*) as total from crash_vehicle_clean group by year(from_unixtime(unix_timestamp(CRASH_DATETIME, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))),case when year(from_unixtime(unix_timestamp(CRASH_DATETIME, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))-vyear>5 then 1 else 0 end   order by total;
+
+select hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as hour, count(*) as total from crash_vehicle_clean group by hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by total;
+
+select from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E') as dow, count(*) as total from crash_vehicle_clean group by from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E') order by dow;
+
+ALCRESULT
+select from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E') as dow, count(ALCRESULT) as total from crash_vehicle_clean where ALCRESULT>0 group by from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E') order by total;
+
+
+Most Accident Times:
+select hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as hour, count(*) as total from crash_vehicle_clean group by  hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by total;
+
+select from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E') as dow, hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as hour, count(*) as total from crash_vehicle_clean group by from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E'), hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by dow, hour;
+
+
+
+
+
+select month(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as month, hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as hour, count(*) as total from crash_vehicle_clean group by month(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))), hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by month, hour;
+
+
+select month(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as month, case when hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) in ( 7,8,9,10,11,12,13,14,15,16,17,18) then 'Day' when hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) in ( 19,20,21,22,23,0) then 'Night' when hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) in ( 1,2,3,4,5,6) then 'Early Morning' else null end as hour , count(*) as total from crash_vehicle_clean group by from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), 'E'), hour(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by dow, hour;
+
+
+
+hive -e "use jerjacob; select year(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))) as year, count(*) as total from crash_vehicle_clean group by year(from_unixtime(unix_timestamp(CRASH_DATETIME_UTC, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))  order by total;;" > project_year.csv

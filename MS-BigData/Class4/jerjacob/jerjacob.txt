@@ -1,0 +1,81 @@
+-----------------------------------------------
+-------- Home Work 3 ---- Jerry Jacob  --------
+-----------------------------------------------
+--Q1 (20 pts). Start sparkR session correctly. Use the nyc_taxi_Jan table in Hive you previously
+--created for HW1. Create a Spark DataFrame in R and load all the taxi trips started on Jan 1.
+--Show the top 25 rows of this Spark DataFrame.
+
+--Q1 Answer
+--Started sparkR using the command sparkR
+sql("use jerjacob")
+nyc_taxi_jan1_df<-sql("select * from nyc_taxi_jan where dayofmonth(pickup_datetime)=1")
+showDF(nyc_taxi_jan1_df,25)
+
+----------------------------------------------
+--Q2 (20 pts). Write R code in SparkR to find trips on Jan 1 paid for by credit card (CRD) and trips
+--paid for by cash (CSH) from the Spark DataFrame created in Q1. Save these two groups of trips
+--into two new Spark DataFrames, namely, “Trips_CRD” and “Trips_CSH”. Use the Spark
+--DataFrame functions (e.g., SELECT, WHERE, groupBy) instead of using the sql() function in this
+--question. Show the first 20 rows of each DataFrame to validate the results.
+
+--Q2 Answer
+trips_CRD<-where(nyc_taxi_jan1_df,nyc_taxi_jan1_df$payment_type=='CRD')
+trips_CSH<-where(nyc_taxi_jan1_df,nyc_taxi_jan1_df$payment_type=='CSH')
+
+showDF(trips_CRD,20)
+showDF(trips_CSH,20)
+
+----------------------------------------------
+--Q3 (20 pts). Use the two DataFrames created in Q2 to perform the following analysis in SparkR.
+--First, remove trips with no tip information (null). Then calculate the percentage of tip with
+--respect to all the other charges (i.e., tip_percent = tip_amount/( total_payment – tip_amount)).
+--Generate two new Spark DataFrames with the extra tip_percent column added to the
+--“Trips_CRD” and the “’Trips_CSH” DataFrames, respectively. You will get two new Spark
+--DataFrames, “Trips_CRD_Pct” and “Trips_CSH_Pct”. Again, you must use Spark DataFrame
+--functions to solve this problem, rather than sending queries to Hive using sql().
+
+--Q3 Answer
+trips_CRD<-where(trips_CRD,isNotNull(trips_CRD$tip_amount))
+trips_CSH<-where(trips_CSH,isNotNull(trips_CSH$tip_amount))
+
+trips_CRD_Pct<-select(trips_CRD,c(trips_CRD$tip_amount/(trips_CRD$total_amount-trips_CRD$tip_amount),colnames(trips_CRD)))
+trips_CSH_Pct<-select(trips_CSH,c(trips_CSH$tip_amount/(trips_CSH$total_amount-trips_CSH$tip_amount),colnames(trips_CSH)))
+
+colnames(trips_CRD_Pct)[1]="tip_percent"
+colnames(trips_CSH_Pct)[1]="tip_percent"
+
+----------------------------------------------
+--Q4 (15 pts). Use the spark DataFrames you obtained from Q3 to calculate on average how many
+--percent passengers tip (tip_percent) when paying by credit card and by cash, respectively. The
+--results should be two numbers. Again you must not use the sql() function.
+
+--Q4 Answer 
+--Average tip percent from the group who paid by Cash
+showDF(agg(groupBy(trips_CSH_Pct, "payment_type"), tip_percent="avg"))
+--9.286468196330418E-6
+--Average tip percent from the group who paid by Credit Card
+showDF(agg(groupBy(trips_CRD_Pct, "payment_type"), tip_percent="avg"))
+--0.19178400872496482
+
+----------------------------------------------
+--Q5. (25 pts) For each day in January, calculate the total fare revenue of all the taxi drivers. The
+--total revenue of a day is the total amount of money paid in all the trips that end on that day.
+--You need to load the whole month’s data again into a Spark DataFrame (using sql()). Then use
+--the SparkR DataFrame functions (e.g., SELECT, WHERE, groupBy) to aggregate the results into
+--another Spark DataFrame with 31 rows. Convert the second spark DataFrame to an R data
+--frame. Finally, generate a line chart to visualize the data, where the X-axis is the day of month
+--and the Y-axis is the total revenue of all the taxi drivers on that day. Name this image file
+--“plot.png”. Save the image file and include it in your submission. 
+
+--Q5 Answer
+library(ggplot2)
+nyc_taxi_jan_df<-sql("select * from nyc_taxi_jan")
+nyc_taxi_jan_df<-where(nyc_taxi_jan_df,isNotNull(nyc_taxi_jan_df$pickup_datetime))
+nyc_taxi_agg_df<-agg(groupBy(nyc_taxi_jan_df, dayofmonth(nyc_taxi_jan_df$pickup_datetime)), total_amount="sum")
+showDF(nyc_taxi_agg_df,31)
+colnames(nyc_taxi_agg_df)[1]="Day"
+colnames(nyc_taxi_agg_df)[2]="Total"
+nyc_taxi_agg_df_r<-collect(nyc_taxi_agg_df)
+png("plot.png")
+qplot(nyc_taxi_agg_df_r$Day, nyc_taxi_agg_df_r$Total, geom="line")
+dev.off()

@@ -1,0 +1,57 @@
+-----------------------------------------------------------------------------------------
+--1. (Q4 from HW1) (15 pts) Create another Hive table “nyc_taxi_Jan_part_day” for the NYC_Yellow Taxi Data and define partitions based on the day of the pickup time. Write a query to load all the data from nyc_taxi_Jan table into all the partitions of the new table. Make sure to load the correct part to each partition.
+
+CREATE TABLE IF NOT EXISTS nyc_taxi_Jan_part_day(vendor_id String,pickup_datetime timestamp,dropoff_datetime timestamp,passenger_count int,trip_distance double,pickup_longitude double,pickup_latitude double,rate_code int,store_and_fwd_flag char(1),dropoff_longitude double,dropoff_latitude double,payment_type CHAR(3),fare_amount double,surcharge double,mta_tax double,tip_amount double,tolls_amount double,total_amount double) PARTITIONED BY (day int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+INSERT INTO TABLE nyc_taxi_Jan_part_day Partition (day) SELECT *, DAY(pickup_datetime) from nyc_taxi_Jan;
+
+-----------------------------------------------------------------------------------------
+--2. (Q5 from HW1) (15 pts) Calculate the total number of trips on day 31 (use pickup_datetime). Write two HiveQL queries using (a) the nyc_taxi_Jan table (without partitions) and (b) the nyc_taxi_Jan_part_day table (with partitions), respectively. Report the “Total MapReduce CPU Time Spent” of these two queries (from the log) using HiveQL comments. Which one is faster?
+
+SELECT DAY(pickup_datetime) AS day, count(*) FROM nyc_taxi_Jan WHERE DAY(pickup_datetime)=31 GROUP BY DAY(pickup_datetime);
+--Total MapReduce CPU Time Spent: 1 minutes 38 seconds 690 msec
+
+SELECT day, count(*) FROM nyc_taxi_Jan_part_day WHERE day=31 GROUP BY day;
+--Total MapReduce CPU Time Spent: 7 seconds 430 msec
+
+-----------------------------------------------------------------------------------------
+--3. (15 pts) Create another Hive table “nyc_taxi_Jan_part_day_hour” for the NYC_Yellow Taxi Data and define partitions based on the hour of the pickup time and the day of the pickup time (two columns). Write a query to load all the data from the nyc_taxi_Jan table into all the partitions of this new table. 
+
+CREATE TABLE IF NOT EXISTS nyc_taxi_Jan_part_day_hour(vendor_id String,pickup_datetime timestamp,dropoff_datetime timestamp,passenger_count int,trip_distance double,pickup_longitude double,pickup_latitude double,rate_code int,store_and_fwd_flag char(1),dropoff_longitude double,dropoff_latitude double,payment_type CHAR(3),fare_amount double,surcharge double,mta_tax double,tip_amount double,tolls_amount double,total_amount double) PARTITIONED BY (hour int, day int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+INSERT INTO TABLE nyc_taxi_Jan_part_day_hour Partition (hour, day) SELECT *, HOUR(pickup_datetime), DAY(pickup_datetime) from nyc_taxi_Jan;
+
+-----------------------------------------------------------------------------------------
+--4. (15 pts) Write a Hive query to compare the total number of trips in each hour on day 1 and day 31. Your output should have three columns: hour, day1_trips, day31_trips. Sort the results by hour in ascending order. Do this query twice using (a) the nyc_taxi_Jan table, and (b) the table created in Q3, respectively. Report the “Total MapReduce CPU Time Spent” of these two queries (from the log) using HiveQL comments. Which one is faster?
+
+SELECT temp.hour, sum(temp.day1_trips) AS day1_trips, sum(temp.day31_trips) AS day31_trips FROM (SELECT HOUR(pickup_datetime) as hour, count(*) AS day1_trips,  0 as day31_trips FROM nyc_taxi_Jan_part_day_hour WHERE DAY(pickup_datetime)=1 GROUP BY HOUR(pickup_datetime) UNION SELECT HOUR(pickup_datetime) AS hour, 0 as day1_trips, count(*) AS day31_trips  FROM nyc_taxi_Jan_part_day_hour WHERE DAY(pickup_datetime)=31 GROUP BY HOUR(pickup_datetime)) as temp GROUP BY hour ORDER BY hour;
+--Total MapReduce CPU Time Spent: 3 minutes 38 seconds 590 msec
+
+SELECT temp.hour, sum(temp.day1_trips) AS day1_trips, sum(temp.day31_trips) AS day31_trips FROM (SELECT hour, count(*) AS day1_trips,  0 as day31_trips FROM nyc_taxi_Jan_part_day_hour WHERE day=1 GROUP BY hour UNION SELECT hour, 0 as day1_trips, count(*) AS day31_trips  FROM nyc_taxi_Jan_part_day_hour WHERE day=31 GROUP BY hour) as temp GROUP BY hour ORDER BY hour;
+--Total MapReduce CPU Time Spent: 28 seconds 670 msec
+
+-----------------------------------------------------------------------------------------
+--5. (15 pts) Create another table called “nyc_taxi_buk_dist” for the same dataset. In this table, do not define any partitions. Instead, define 10 buckets based on the distance of the trips (trip_distance). Write a query to load the entire dataset to this table.
+
+CREATE TABLE IF NOT EXISTS nyc_taxi_buk_dist (vendor_id String,pickup_datetime timestamp,dropoff_datetime timestamp,passenger_count int,trip_distance double,pickup_longitude double,pickup_latitude double,rate_code int,store_and_fwd_flag char(1),dropoff_longitude double,dropoff_latitude double,payment_type CHAR(3),fare_amount double,surcharge double,mta_tax double,tip_amount double,tolls_amount double,total_amount double) CLUSTERED BY(trip_distance) INTO 10 BUCKETS ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+INSERT INTO TABLE nyc_taxi_buk_dist SELECT * from nyc_taxi_Jan;
+
+-----------------------------------------------------------------------------------------
+--6. (15 pts) Write a Hive query to calculate the average fare amount of trips between 10 miles and 15 miles(inclusive). Do this query twice using (a) the nyc_taxi_Jan table, and (b) the table created in Q5, respectively. Report the “Total MapReduce CPU Time Spent” of these two queries (from the log) in using HiveQL comment. Which one is faster?
+
+SELECT avg(fare_amount) FROM  nyc_taxi_Jan WHERE trip_distance BETWEEN 10 and 15;
+--Total MapReduce CPU Time Spent: 1 minutes 11 seconds 730 msec
+
+SELECT avg(fare_amount) FROM  nyc_taxi_buk_dist WHERE trip_distance BETWEEN 10 and 15;
+--Total MapReduce CPU Time Spent: 49 seconds 660 msec
+
+-----------------------------------------------------------------------------------------
+--7. (10 pts) Compute statistics for all the columns of the table nyc_taxi_Jan. Show formatted statistics of the “passenger_count” column. Report the min and max values in a HiveQL comment line.
+
+analyze table nyc_taxi_Jan compute statistics for columns vendor_id,pickup_datetime,dropoff_datetime,passenger_count,trip_distance,pickup_longitude,pickup_latitude,rate_code, store_and_fwd_flag,dropoff_longitude,dropoff_latitude,payment_type,fare_amount,surcharge,mta_tax,tip_amount,tolls_amount,total_amount;
+
+describe formatted nyc_taxi_Jan passenger_count;
+--min: 0 ; max: 208
+
+-----------------------------------------------------------------------------------------

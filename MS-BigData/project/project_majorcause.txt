@@ -1,0 +1,178 @@
+" avoidance)"""	NULL
+Wall	NULL
+Utility pole/light support	NULL
+Undercarriage	NULL
+Tree	NULL
+Traffic signal support	NULL
+Traffic sign support	NULL
+Traffic director (person)	NULL
+Top	NULL
+Snow bank	NULL
+Rear - passenger side corner	NULL
+Rear	NULL
+Railway crossing device	NULL
+Passenger side - rear	NULL
+Not Reported	NULL
+None	NULL
+Non-collision events:  Other non-collision (explai	NULL
+No controls present	NULL
+Miscellaneous events:  Hit and run	NULL
+Minor damage	NULL
+Minor Injury	NULL
+Guardrail - end	NULL
+Fence	NULL
+Embankment	NULL
+Driver side - middle	NULL
+Collision with:  Vehicle in traffic	NULL
+Collision with:  Parked motor vehicle	NULL
+Collision with:  Animal	NULL
+Collision with fixed object:  Utility pole/light s	NULL
+Collision with fixed object:  Other fixed object (	NULL
+Collision with fixed object:  Guardrail - face	NULL
+Collision with fixed object:  Ground	NULL
+Collision with fixed object:  Bridge/bridge rail p	NULL
+Collision with fixed object:  Bridge overhead stru	NULL
+Bridge/bridge rail parapet	NULL
+Bridge pier or support	NULL
+60 MPH	NULL
+45 MPH	NULL
+30 MPH	NULL
+15 MPH	NULL
+"Pre-crash events:  Evasive action (swerve	NULL"	
+ brakes	NULL
+Warning sign	NULL
+Rear - driver side corner	NULL
+Pre-crash events:  Ran off road - right	NULL
+Possible/Unknown	NULL
+Other traffic barrier (explain in narrative)	NULL
+Other post/pole/support (explain in narrative)	NULL
+Other (explain in narrative)	NULL
+No Passing Zone (marked)	NULL
+Major Injury	NULL
+Impact attenuator/crash cushion	NULL
+Ground	NULL
+Front - passenger side corner	NULL
+Flashing traffic control signal	NULL
+Yield signs	NULL
+Driver side - front	NULL
+Ditch	NULL
+Collision with:  Other non-fixed object (explain i	NULL
+Collision with fixed object:  Traffic signal suppo	NULL
+Collision with fixed object:  Traffic sign support	NULL
+Collision with fixed object:  Other post/pole/supp	NULL
+Collision with fixed object:  Ditch	NULL
+Collision with fixed object:  Curb/island/raised m	NULL
+Building	NULL
+Bridge overhead structure	NULL
+65 MPH	NULL
+50 MPH	NULL
+35 MPH	NULL
+20 MPH	NULL
+" etc)"""	NULL
+Work zone sign	NULL
+Traffic signals	NULL
+Stop signs	NULL
+Severe - vehicle totaled	NULL
+Property Damage Only	NULL
+Pre-crash events:  Ran off road - left	NULL
+Passenger side - middle	NULL
+Passenger side - front	NULL
+Other fixed object (explain in narrative)	NULL
+None (no fixed object struck)	NULL
+Non-collision/no damage	NULL
+Non-collision events:  Overturn/rollover	NULL
+Non-collision events:  Jackknife	NULL
+Mailbox	NULL
+Landscape/shrubbery	NULL
+Guardrail - face	NULL
+Functional damage	NULL
+Front - driver side corner	NULL
+Front	NULL
+Fire hydrant	NULL
+Fatal	NULL
+Driver side - rear	NULL
+Disabling damage	NULL
+Curb/island/raised median	NULL
+Culvert/pipe opening	NULL
+Concrete traffic barrier (median or right side)	NULL
+Collision with:  Struck/struck by object/cargo/per	NULL
+Collision with fixed object:  Concrete traffic bar	NULL
+Cable barrier	NULL
+70 MPH	NULL
+55 MPH	NULL
+40 MPH	NULL
+25 MPH	NULL
+10 MPH	NULL
+"Pre-crash events:  Equipment failure (tires	NULL"	
+"Operating vehicle in an reckless	NULL"	
+"Driver Distraction:  Adjusting devices (radio	NULL"	
+ panic braking	NULL
+Aggressive driving/road rage	0
+Driver Distraction:  Talking on a hand-held device	0
+Passing:  Through/around barrier	0
+Towing Improperly	0
+Driving less than the posted speed limit	0
+Passing:  On wrong side	0
+Other (explain in narrative):  Illegal off-road dr	0
+Driver Distraction:  Unrestrained animal	0
+Driver Distraction:  Talking on a hands free devic	0
+Oversized Load/Vehicle	0
+Failure to dim lights/have lights on	0
+FTYROW:  Making right turn on red signal	0
+Traveling on prohibited traffic way	0
+Other (explain in narrative):  Getting off/out of 	0
+Failure to signal intentions	0
+Other (explain in narrative):  Disregarded Warning	1
+Operator inexperience	1
+Other (explain in narrative):  Vision obstructed	1
+Other (explain in narrative):  Improper operation	2
+FTYROW:  From parked position	2
+Driver Distraction:  Exterior distraction	2
+Equipment failure	2
+Drove around RR grade crossing gates	2
+Vehicle stopped on railroad tracks	2
+Passing:  Other passing (explain in narrative)	2
+Driver Distraction:  Other electronic device activ	2
+Other (explain in narrative):  Disregarded signs/r	2
+Improper Backing	3
+Failed to keep in proper lane	3
+Cargo/equipment loss or shift	4
+Downhill runaway	5
+Driver Distraction:  Inattentive/lost in thought	5
+Disregarded RR Signal	6
+Driver Distraction:  Other interior distraction	8
+Failed to yield to emergency vehicle	8
+Driver Distraction:  Passenger	9
+Improper or erratic lane changing	10
+Driver Distraction:  Manual operation of an electr	11
+Driver Distraction:  Reaching for object(s)/fallen	13
+Separation of units	13
+Passing:  Where prohibited by signs/markings	13
+Passing:  With insufficient distance/inadequate vi	13
+FTYROW:  To pedestrian	17
+FTYROW:  From driveway	23
+Ran off road - right	26
+Over correcting/over steering	27
+Illegally Parked/Unattended	29
+Animal	33
+FTYROW:  From yield sign	34
+Made improper turn	35
+FTYROW:  At uncontrolled intersection	43
+Crossed median (divided)	43
+FTYROW:  Other (explain in narrative)	78
+Followed too close	80
+Ran Traffic Signal	84
+Other (explain in narrative):  Other	99
+Ran off road - left	111
+Unknown	117
+Other (explain in narrative):  No improper action	117
+Traveling wrong way or on wrong side of road	133
+FTYROW:  Making left turn	143
+Swerving/Evasive Action	173
+Exceeded authorized speed	207
+Ran off road - straight	213
+FTYROW:  From stop sign	282
+Ran Stop Sign	357
+Driving too fast for conditions	406
+Lost Control	535
+Crossed centerline (undivided)	1263

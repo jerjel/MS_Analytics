@@ -1,0 +1,96 @@
+CREATE TABLE  employee_state_p (eid char(4), name String,
+salary Decimal, title String, dept_no_query String)
+PARTITIONED BY ( dept string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+
+Load data local inpath "project/employee_sales.txt" into table employee_p partition (dept = 'Sales');
+
+Load data local inpath "project/employee_accounting.txt" into table employee_p partition (dept = 'Accounting');
+
+
+Insert into table employee_p partition(dept = 'Sales') select * from employee where dept = 'Sales';
+
+Insert into table employee_p partition(dept = 'Accounting') select * from employee where dept = 'Accounting';
+
+
+
+CREATE TABLE IF NOT EXISTS employee_state_p (eid char(4), name String,
+salary Decimal, title String, dept_no_query String)
+PARTITIONED BY (state char(2), dept string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+LOAD DATA INPATH 'project/employee_IA_Sales.csv' INTO TABLE Employee_State_P PARTITION (state='IA', department='Sales'); 
+
+LOAD DATA INPATH 'project/employee_IL_Sales.csv' INTO TABLE Employee_State_P PARTITION (state='IL', department='Sales'); 
+
+LOAD DATA INPATH 'project/employee_IA_Accounting.csv' INTO TABLE Employee_State_P PARTITION (state='IA', department='Accounting'); 
+
+
+
+CREATE TABLE IF NOT EXISTS employee_dp 
+(eid char(4), name String,
+salary Decimal, title String, dept_no_query String)
+PARTITIONED BY (dept string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+INSERT OVERWRITE  TABLE employee_dp partition (dept) SELECT eid, Name, Salary, Title, dept as dept_no_query, dept FROM employee;
+
+
+
+
+CREATE TABLE IF NOT EXISTS employee_p2 
+(eid char(4), name String,
+salary Decimal)
+PARTITIONED BY (title string, dept string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+
+INSERT INTO TABLE employee_p2 Partition (title, dept)
+SELECT eid, Name, Salary, Title, dept FROM employee;
+
+-----------------------------------------
+
+CREATE TABLE IF NOT EXISTS nyc_taxi_p2
+(vendor_id               string,
+pickup_datetime         timestamp,
+dropoff_datetime        timestamp,
+passenger_count         int,
+trip_distance           double,
+pickup_longitude        double,
+pickup_latitude         double,
+rate_code               int,
+store_and_fwd_flag      char(1),
+dropoff_longitude       double,
+dropoff_latitude        double,
+payment_type            char(3),
+fare_amount             double,
+surcharge               double,
+mta_tax                 double,
+tip_amount              double,
+tolls_amount            double,
+total_amount            double)
+PARTITIONED BY (hour int)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+
+INSERT INTO TABLE nyc_taxi_p2 Partition (hour)
+SELECT *, hour(pickup_datetime) FROM nyc_taxi_jan where pickup_datetime is not NULL;
+
+
+select distinct hour from nyc_taxi_p2;

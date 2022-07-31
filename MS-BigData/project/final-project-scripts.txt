@@ -1,0 +1,156 @@
+--imported all tables and cleaned the , within the "
+--sed -i 's/, /; /g' crash_location.csv
+--created hive tsbles based on the clened data
+--SparkR cleaning
+
+sql("use jerjacob")
+--showDF(sql("show tables"))
+
+location_df<-sql("select * from crash_location")
+person_df<-sql("select * from crash_person")
+vehicle_df<-sql("select * from crash_vehicle")
+
+--showDF(count(groupBy(vehicle_df, "DRIVERGEN")),100)
+--showDF(count(groupBy(person_df, "ZINJ_SEATING")),100)
+--showDF(count(groupBy(location_df, "drugalc")),100)
+
+vehicle_df<-filter(vehicle_df,vehicle_df$DRIVERGEN!='DRIVERGEN')
+person_df<-filter(person_df,person_df$ZINJ_SEATING!='ZINJ_SEATING')
+
+--head(nrow(filter(person_df, isNull(person_df$ZINJ_SEATING))))
+--head(nrow(filter(person_df, person_df$ZINJ_SEATING=="")))
+
+crash_locper_raw_df <- sql("SELECT 
+cl.CASENUMBER,
+year(cl.crash_date) as crashyear,
+month(cl.crash_date) as crashmonth,
+day(cl.crash_date) as crashday,
+hour(cl.crash_date) as crashhour,
+cl.TIMESTR,cl.DISTRICT,cl.COUNTY_NUMBER,cl.CITY_NUMBER,cl.SYSTEMSTR,cl.LITERAL,cl.CRCOMNNR,cl.MAJCSE,cl.DRUGALC,
+cl.ECNTCRC,cl.LIGHT,cl.CSRFCND,cl.WEATHER,cl.RCNTCRC,cl.RDTYP,cl.PAVED,cl.CSEV,cl.FATALITIES,cl.INJURIES,
+cl.PROPDMG,cl.VEHICLES,cl.TOCCUPANTS,cl.XCOORD,cl.YCOORD,cl.CITY_NAME,cl.COUNTY_NAME,
+cp.PERSONKEY ,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_INJUREDAGE ELSE cp.ZINJ_INJUREDAGE END AS INJUREDAGE,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_INJUREDGEN ELSE cp.ZINJ_INJUREDGEN END AS INJUREDGEN,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_INJSTATUS ELSE cp.ZINJ_INJSTATUS END AS INJSTATUS,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_SEATING ELSE cp.ZINJ_SEATING END AS SEATING,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_OCCPROTECT ELSE cp.ZINJ_OCCPROTECT END AS OCCPROTECT,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_EJECTION ELSE cp.ZINJ_EJECTION END AS EJECTION,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_EJECTIONPATH ELSE cp.ZINJ_EJECTIONPATH END AS EJECTIONPATH,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_AIRBAGDEP ELSE cp.ZINJ_AIRBAGDEP END AS AIRBAGDEP,
+CASE WHEN cl.INJURIES=0 THEN cp.ZUNI_TRAPPED ELSE cp.ZINJ_TRAPPED END AS TRAPPED,
+cp.NM_TYPE ,cp.NM_LOC ,cp.NM_ACTION , cp.NM_SAFETY ,cp.NMCONTCIRC 
+FROM crash_location cl, crash_person cp 
+WHERE cl.CASENUMBER=cp.CASENUMBER")
+
+--head(nrow(filter(crash_locper_raw_df, isNull(crash_locper_raw_df$CASENUMBER))))
+--nrow(person_df)
+--nrow(crash_locper_raw_df)
+--head(select(filter(crash_locper_raw_df, crash_locper_raw_df$SEATING=="Driver/Motorcycle Driver"),"CL.CASENUMBER", "CP.PERSONKEY", "INJUREDAGE","INJUREDGEN"),20)
+
+saveAsTable(crash_locper_raw_df, "crash_locper")
+showDF(sql("show tables"))
+showDF(sql("select count(*) from crash_locper"))
+nrow(crash_locper_raw_df)
+ 
+------------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^
+crash_driver_vehicle_df<- sql("
+SELECT 
+cl.CASENUMBER,
+year(cl.crash_date) as crashyear,
+month(cl.crash_date) as crashmonth,
+day(cl.crash_date) as crashday,
+hour(cl.crash_date) as crashhour,
+cl.TIMESTR,cl.DISTRICT,cl.COUNTY_NUMBER,cl.CITY_NUMBER,cl.SYSTEMSTR,cl.LITERAL,cl.CRCOMNNR,cl.MAJCSE,cl.DRUGALC,
+cl.ECNTCRC,cl.LIGHT,cl.CSRFCND,cl.WEATHER,cl.RCNTCRC,cl.RDTYP,cl.PAVED,cl.CSEV,cl.FATALITIES,cl.INJURIES,
+cl.PROPDMG,cl.VEHICLES,cl.TOCCUPANTS,cl.XCOORD,cl.YCOORD,cl.CITY_NAME,cl.COUNTY_NAME,
+CV.CASENUMBER, CV.VEH_CRASH_KEY, CV.VEH_UNITKEY, CV.DRIVERAGE, CV.DRIVERGEN, CV.CHARGED, CV.ALCRESULT, CV.DRUGRESULT, CV.DRIVERCOND, CV.VISIONOBS, CV.DCONTCIRC1,
+CV.VCONFIG, CV.CARGOBODY, CV.MAKE, CV.MODEL, CV.SEQEVENTS1, CV.SPEEDLIMIT, CV.TRAFCONT, CV.FIXOBJSTR, CV.MOSTDAMAGE, CV.CSEVERITY, CV.MAJORCAUSE,CV.DRUGALCREL 
+FROM crash_location cl, CRASH_VEHICLE CV
+WHERE cl.CASENUMBER=cp.CASENUMBER")
+
+--WHERE CR.CASENUMBER = CV.CASENUMBER AND CR.SEATING = 'Driver/Motorcycle Driver' AND CR.INJUREDAGE = CV.DRIVERAGE")
+--nrow(crash_driver_vehicle_df) = 753361
+--nrow(count(groupBy(crash_driver_vehicle_df, "VEH_UNITKEY"))) = 736318
+
+showDF(sql("SELECT CR.CASENUMBER, CR.PERSONKEY, CR.VEHICLES, CV.FATALITIES
+FROM CRASH_RAW CR, CRASH_VEHICLE CV
+WHERE CV.CASENUMBER = CR.CASENUMBER"))
+----------------------------------------------------------^^^^^^^^^^^^^^^
+--+++df<-crash_raw_df.na.fill("INJURIES",Seq("blank"))
+--+++showDF(count(groupBy(crash_raw_df, "INJURIES")),100)
+
+--Target
+crash_raw_df$INJUREDIND <- ifelse(crash_raw_df$INJURIES>0, 1, 0)
+--showDF(count(groupBy(crash_raw_df, "INJUREDIND")),100) 
+ 
+ 
+crash_df <- dropna(crash_raw_df);
+ 
+df_list <- randomSplit(crash_df, c(3,7), 2)
+attribs_df <- df_list[[1]]
+--testing_df <- df_list[[2]]
+model <- spark.randomForest(crash_df,  INJUREDIND ~ . , "classification", numTrees = 20, maxDepth = 5) 
+summary(model)
+Output <- predict(model, test_df)
+showDF(Output)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+------------------------------------------------------------------------------------------------
+--CLEANING CRASH_VEHICLE TABLE
+--unique records are based on VEH_CRASH_KEY=CASENUMBER and VEH_UNITKEY
+
+sql("use jerjacob")
+crash_vehicle_df<-sql("select * from crash_vehicle_clean")
+
+--clean the one record with casenumber is null.
+crash_vehicle_df<-filter(crash_vehicle_df,isNotNull(crash_vehicle_df$casenumber))
+
+--fill empty datetimes with utc datetime. fetch the crash month, year and hour.
+crash_vehicle_df$crash_datetime <- ifelse(crash_vehicle_df$crash_datetime=="", crash_vehicle_df$crash_datetime_utc, crash_vehicle_df$crash_datetime)
+crash_vehicle_df$cln_crash_hour<-hour(from_unixtime(unix_timestamp(crash_vehicle_df$crash_datetime, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))
+crash_vehicle_df$cln_crash_month<-month(from_unixtime(unix_timestamp(crash_vehicle_df$crash_datetime, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))
+crash_vehicle_df$cln_crash_year<-year(from_unixtime(unix_timestamp(crash_vehicle_df$crash_datetime, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))
+crash_vehicle_df$cln_crash_hour <- ifelse(isNull(crash_vehicle_df$cln_crash_hour), 2, crash_vehicle_df$cln_crash_hour)
+crash_vehicle_df$cln_crash_month <- ifelse(isNull(crash_vehicle_df$cln_crash_month), 3, crash_vehicle_df$cln_crash_month)
+crash_vehicle_df$cln_crash_year <- ifelse(isNull(crash_vehicle_df$cln_crash_year), 2008, crash_vehicle_df$cln_crash_year)
+
+
+--CLEAN: CASENUMBER, VEH_UNITKEY, DRIVERAGE, CHARGED
+--IGNORED?: DL_STATE, DRUGTEST
+--UNCLEAN: DRIVERGEN, ALCRESULT, DRUGRESULT
+
+
+
+
+showDF(count(groupBy(vehicle_df, "DRIVERGEN")),100)
+showDF(count(groupBy(person_df, "ZINJ_SEATING")),100)
+
+
+showDF(filter(crash_vehicle_df, crash_vehicle_df$crash_datetime==''))
+
+head(select(filter(crash_vehicle_df, isNull(crash_vehicle_df$cln_crash_year)),"crash_datetime","veh_unitkey")) 
+
+head(select(filter(crash_vehicle_df, crash_vehicle_df$DRIVERGEN=='Unknown')),"CASENUMBER","veh_unitkey") 
+
+Find Distinct Values
+showDF(sql("select distinct from crash_vehicle_clean")
+
+Casting to another datatype
+myDF <- withColumn(myDF, "date2", cast(myDF$date2, "date"))
